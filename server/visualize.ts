@@ -18,7 +18,7 @@ const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+  limits: { fileSize: 4 * 1024 * 1024, files: 1 },
   fileFilter: (_request, file, callback) => {
     callback(null, allowedMimeTypes.has(file.mimetype));
   },
@@ -135,6 +135,10 @@ export async function createVisualization(request: Request, response: Response) 
       form.append("prompt", prompt);
       form.append("size", imageSize);
       form.append("quality", imageQuality);
+      // Vercel limits function responses to 4.5 MB. A base64 PNG can exceed
+      // that limit even for a normal facade image, so request compressed JPEG.
+      form.append("output_format", "jpeg");
+      form.append("output_compression", "75");
       form.append("image[]", new Blob([image.buffer], { type: image.mimetype }), image.originalname);
 
       const openaiResponse = await fetch(`${baseUrl}/images/edits`, {
@@ -159,7 +163,10 @@ export async function createVisualization(request: Request, response: Response) 
 
       const b64 = payload.data?.[0]?.b64_json;
       const url = payload.data?.[0]?.url;
-      const imageUrl = b64 ? `data:image/png;base64,${b64}` : url!;
+      if (!b64 && !url) {
+        return sendJson(response, 502, { error: "لم يرجع مزود الصور نتيجة صالحة.", code: "EMPTY_IMAGE_RESULT" });
+      }
+      const imageUrl = b64 ? `data:image/jpeg;base64,${b64}` : url!;
       return sendJson(response, 200, { success: true, imageUrl, model, isSimulation: false });
     }
   } catch (error) {
@@ -186,7 +193,7 @@ export function visualizeErrorHandler(error: unknown, _request: Request, respons
   if (error instanceof multer.MulterError) {
     const isTooLarge = error.code === "LIMIT_FILE_SIZE";
     return sendJson(response, isTooLarge ? 413 : 400, {
-      error: isTooLarge ? "حجم الصورة أكبر من 10MB." : "تعذر قراءة ملف الصورة. استخدم صورة واحدة بصيغة JPG أو PNG أو WebP.",
+      error: isTooLarge ? "حجم الصورة أكبر من 4MB." : "تعذر قراءة ملف الصورة. استخدم صورة واحدة بصيغة JPG أو PNG أو WebP.",
       code: isTooLarge ? "IMAGE_TOO_LARGE" : "UPLOAD_ERROR",
     });
   }

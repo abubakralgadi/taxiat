@@ -226,9 +226,9 @@ function Home() {
       toast.error("تعذر رفع الصورة", { description: "الصيغ المدعومة: JPG، PNG، WebP" });
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      setUploadError("حجم الصورة أكبر من 10MB.");
-      toast.error("الصورة كبيرة جدًا", { description: "اختر صورة بحجم أقل من 10MB." });
+    if (file.size > 4 * 1024 * 1024) {
+      setUploadError("حجم الصورة أكبر من 4MB.");
+      toast.error("الصورة كبيرة جدًا", { description: "اختر صورة بحجم أقل من 4MB." });
       return;
     }
     if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
@@ -438,7 +438,7 @@ function Home() {
                     <input ref={fileInputRef} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => handleFile(event.target.files?.[0])} />
                     {!preview ? (
                       <button type="button" className={`upload-zone ${isDragging ? "upload-zone--dragging" : ""}`} onClick={() => fileInputRef.current?.click()} onDragOver={(event) => { event.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={(event) => { event.preventDefault(); setIsDragging(false); handleFile(event.dataTransfer.files?.[0]); }}>
-                        <span className="upload-icon"><CloudUpload size={22} /></span><strong>أفلت صورة الواجهة هنا</strong><span>أو اضغط للاختيار · JPG / PNG / WebP</span><small>حجم الملف حتى 10MB</small>
+                        <span className="upload-icon"><CloudUpload size={22} /></span><strong>أفلت صورة الواجهة هنا</strong><span>أو اضغط للاختيار · JPG / PNG / WebP</span><small>حجم الملف حتى 4MB</small>
                       </button>
                     ) : (
                       <div className={`upload-preview ${isGenerating ? "upload-preview--scanning" : ""}`}>
