@@ -42,16 +42,8 @@ export async function generateVisualization(
     | { error?: string }
     | null;
 
-  if (!response.ok) {
-    const serverMessage = payload && "error" in payload && typeof payload.error === "string" ? payload.error : null;
-    const fallback = response.status === 413
-      ? "حجم الصورة يتجاوز الحد المسموح به على الخادم. اختر صورة أصغر من 4MB."
-      : `فشل خادم التوليد (${response.status}). راجع سجل /api/visualize في Vercel Logs.`;
-    throw new Error(serverMessage || fallback);
-  }
-
-  if (!payload || !("imageUrl" in payload) || !payload.imageUrl) {
-    throw new Error("لم تصل صورة صالحة من خادم التوليد.");
+  if (!response.ok || !payload || !("imageUrl" in payload)) {
+    throw new Error(payload && "error" in payload ? payload.error : "تعذر إنشاء التصور حاليًا");
   }
 
   onStatus?.("اكتمل التصور بنجاح");

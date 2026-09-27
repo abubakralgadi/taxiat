@@ -1,4 +1,4 @@
-import { visualizeErrorHandler, visualizeRoute } from "../server/visualize";
+import { visualizeErrorHandler, visualizeRoute } from "../server/visualize.js";
 
 /**
  * Vercel serves files in /api as serverless functions. Keep the AI key on the
