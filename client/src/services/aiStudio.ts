@@ -1,8 +1,3 @@
-export type GenerationStage = {
-  label: string;
-  duration: number;
-};
-
 export type VisualizationRequest = {
   image: File;
   width: string;
@@ -23,7 +18,7 @@ export type VisualizationResponse = {
 
 export async function generateVisualization(
   request: VisualizationRequest,
-  onProgress?: (progress: number, stage: string) => void,
+  onStatus?: (stage: string) => void,
 ): Promise<VisualizationResponse> {
   const formData = new FormData();
   formData.append("image", request.image, request.image.name);
@@ -33,14 +28,14 @@ export async function generateVisualization(
   formData.append("productName", request.productName);
   formData.append("stylePrompt", request.stylePrompt.trim());
 
-  onProgress?.(15, "جاري رفع صورة الواجهة وتحليل الأبعاد");
+  onStatus?.("جارٍ إرسال الصورة وطلب التصور");
 
   const response = await fetch("/api/visualize", {
     method: "POST",
     body: formData,
   });
 
-  onProgress?.(70, "جاري معالجة الكسوة وتطبيق الخامة بالذكاء الاصطناعي");
+  onStatus?.("وصلت الاستجابة، نجهّز الصورة للعرض");
 
   const payload = await response.json().catch(() => null) as
     | VisualizationResponse
@@ -51,6 +46,6 @@ export async function generateVisualization(
     throw new Error(payload && "error" in payload ? payload.error : "تعذر إنشاء التصور حاليًا");
   }
 
-  onProgress?.(100, "اكتمل التصور بنجاح");
+  onStatus?.("اكتمل التصور بنجاح");
   return payload;
 }

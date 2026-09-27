@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Maximize2, MoveHorizontal } from "lucide-react";
 
 type BeforeAfterViewerProps = {
@@ -18,6 +18,21 @@ export default function BeforeAfterViewer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isFullscreen && event.key === "Escape") {
+        setIsFullscreen(false);
+      }
+      if (event.key === "ArrowLeft") {
+        setPosition((current) => Math.min(95, current + 5));
+      } else if (event.key === "ArrowRight") {
+        setPosition((current) => Math.max(5, current - 5));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreen]);
+
   const updatePosition = (clientX: number) => {
     const rect = frameRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -35,15 +50,19 @@ export default function BeforeAfterViewer({
           event.currentTarget.setPointerCapture(event.pointerId);
           updatePosition(event.clientX);
         }}
-        role="img"
-        aria-label="مقارنة تفاعلية بين الواجهة قبل وبعد تطبيق الخامة"
+        tabIndex={0}
+        role="region"
+        aria-label="مقارنة تفاعلية بين الواجهة قبل وبعد تطبيق الخامة. استخدم المفاتيح يمين ويسار للتحكم."
       >
         <img className="before-after__image" src={before} alt={beforeAlt} draggable={false} />
-        <div className="before-after__after" style={{ width: `${position}%` }}>
+        <div className="before-after__after" style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}>
           <img className="before-after__image" src={after} alt={afterAlt} draggable={false} />
         </div>
-        <div className="before-after__label before-after__label--before">قبل</div>
-        <div className="before-after__label before-after__label--after">بعد</div>
+        <div className="before-after__label before-after__label--before">BEFORE · قبل</div>
+        <div className="before-after__label before-after__label--after">AFTER · بعد</div>
+        <div className="before-after__hint" aria-hidden="true">
+          <span>اسحب للمقارنة</span>
+        </div>
         <div className="before-after__handle" style={{ left: `${position}%` }} aria-hidden="true">
           <span><MoveHorizontal size={15} strokeWidth={1.7} /></span>
         </div>
